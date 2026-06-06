@@ -30,6 +30,8 @@ var _minatoku_triggered := false
 
 func _ready() -> void:
 	add_to_group("main")
+	# Main 自体は pause 中も動かす (focus_in 通知を受け取って再開できるように)
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	_set_world_active(_outside, true)
 	_set_world_active(_inside, false)
 	_fade.modulate.a = 0.0
@@ -235,3 +237,21 @@ func _end_transition() -> void:
 func _set_world_active(world: Node, active: bool) -> void:
 	world.visible = active
 	world.process_mode = Node.PROCESS_MODE_INHERIT if active else Node.PROCESS_MODE_DISABLED
+
+## ブラウザのタブが背面に行った/戻ったとき pause/resume する。
+## モバイルアプリ相当の通知も同時に拾う。
+func _notification(what: int) -> void:
+	match what:
+		NOTIFICATION_WM_WINDOW_FOCUS_OUT, \
+		NOTIFICATION_APPLICATION_FOCUS_OUT, \
+		NOTIFICATION_APPLICATION_PAUSED:
+			_set_paused(true)
+		NOTIFICATION_WM_WINDOW_FOCUS_IN, \
+		NOTIFICATION_APPLICATION_FOCUS_IN, \
+		NOTIFICATION_APPLICATION_RESUMED:
+			_set_paused(false)
+
+func _set_paused(paused: bool) -> void:
+	get_tree().paused = paused
+	# Audio Master バスをミュートして BGM/ぷみずま声を無音化
+	AudioServer.set_bus_mute(0, paused)
