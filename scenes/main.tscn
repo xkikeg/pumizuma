@@ -1,0 +1,180 @@
+[gd_scene load_steps=21 format=3 uid="uid://b0pumi0main00"]
+
+[ext_resource type="Texture2D" path="res://drawings/background_outside.png" id="1_bg_out"]
+[ext_resource type="Texture2D" path="res://drawings/house_exterior.png" id="2_house_ext"]
+[ext_resource type="Texture2D" path="res://drawings/house_interior.png" id="3_house_int"]
+[ext_resource type="Texture2D" path="res://drawings/pumi.png" id="4_pumi"]
+[ext_resource type="Texture2D" path="res://drawings/okaasan_1.png" id="5_oka1"]
+[ext_resource type="Texture2D" path="res://drawings/okaasan_2.png" id="6_oka2"]
+[ext_resource type="Texture2D" path="res://drawings/okaasan_3.png" id="7_oka3"]
+[ext_resource type="Script" path="res://scripts/main.gd" id="8_main"]
+[ext_resource type="Script" path="res://scripts/player.gd" id="9_player"]
+[ext_resource type="Script" path="res://scripts/virtual_stick.gd" id="10_stick"]
+[ext_resource type="Script" path="res://scripts/door.gd" id="11_door"]
+[ext_resource type="PackedScene" path="res://scenes/okaasan.tscn" id="12_oka_scene"]
+[ext_resource type="PackedScene" path="res://scenes/manjiro.tscn" id="13_manjiro_scene"]
+[ext_resource type="AudioStream" path="res://audio/bgm_main.ogg" id="14_bgm"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_player"]
+size = Vector2(40, 40)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_out_wall_h"]
+size = Vector2(3088, 100)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_out_wall_v"]
+size = Vector2(100, 1724)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_in_wall_h"]
+size = Vector2(1716, 100)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_in_wall_v"]
+size = Vector2(100, 956)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_door"]
+size = Vector2(120, 40)
+
+[node name="Main" type="Node2D"]
+script = ExtResource("8_main")
+
+[node name="Bgm" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("14_bgm")
+volume_db = -8.0
+autoplay = true
+
+[node name="Worlds" type="Node2D" parent="."]
+
+[node name="Outside" type="Node2D" parent="Worlds"]
+
+[node name="Background" type="Sprite2D" parent="Worlds/Outside"]
+scale = Vector2(3, 3)
+texture = ExtResource("1_bg_out")
+
+[node name="Walls" type="Node2D" parent="Worlds/Outside"]
+
+[node name="WallTop" type="StaticBody2D" parent="Worlds/Outside/Walls"]
+position = Vector2(0, -862)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Worlds/Outside/Walls/WallTop"]
+shape = SubResource("RectangleShape2D_out_wall_h")
+
+[node name="WallBottom" type="StaticBody2D" parent="Worlds/Outside/Walls"]
+position = Vector2(0, 862)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Worlds/Outside/Walls/WallBottom"]
+shape = SubResource("RectangleShape2D_out_wall_h")
+
+[node name="WallLeft" type="StaticBody2D" parent="Worlds/Outside/Walls"]
+position = Vector2(-1494, 0)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Worlds/Outside/Walls/WallLeft"]
+shape = SubResource("RectangleShape2D_out_wall_v")
+
+[node name="WallRight" type="StaticBody2D" parent="Worlds/Outside/Walls"]
+position = Vector2(1494, 0)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Worlds/Outside/Walls/WallRight"]
+shape = SubResource("RectangleShape2D_out_wall_v")
+
+[node name="House" type="Node2D" parent="Worlds/Outside"]
+
+[node name="Sprite2D" type="Sprite2D" parent="Worlds/Outside/House"]
+position = Vector2(0, -300)
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("2_house_ext")
+
+[node name="Door" type="Area2D" parent="Worlds/Outside/House"]
+position = Vector2(0, -90)
+script = ExtResource("11_door")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Worlds/Outside/House/Door"]
+shape = SubResource("RectangleShape2D_door")
+
+[node name="NPCs" type="Node2D" parent="Worlds/Outside"]
+
+[node name="Okaasan1" parent="Worlds/Outside/NPCs" instance=ExtResource("12_oka_scene")]
+position = Vector2(-1200, -600)
+texture = ExtResource("5_oka1")
+feet_offset = Vector2(0, 309)
+spawn_offsets = [Vector2(150, 0), Vector2(-75, 130), Vector2(-75, -130)]
+
+[node name="Okaasan2" parent="Worlds/Outside/NPCs" instance=ExtResource("12_oka_scene")]
+position = Vector2(1300, -400)
+texture = ExtResource("6_oka2")
+feet_offset = Vector2(0, 316)
+spawn_offsets = [Vector2(80, 0), Vector2(-75, 130), Vector2(-75, -130)]
+
+[node name="Okaasan3" parent="Worlds/Outside/NPCs" instance=ExtResource("12_oka_scene")]
+position = Vector2(-800, 680)
+texture = ExtResource("7_oka3")
+feet_offset = Vector2(0, 231)
+spawn_offsets = [Vector2(150, 0), Vector2(-75, 90), Vector2(-75, -90)]
+
+[node name="Manjiro1" parent="Worlds/Outside/NPCs" instance=ExtResource("13_manjiro_scene")]
+position = Vector2(700, 500)
+
+[node name="Inside" type="Node2D" parent="Worlds"]
+
+[node name="Background" type="Sprite2D" parent="Worlds/Inside"]
+scale = Vector2(2, 2)
+texture = ExtResource("3_house_int")
+
+[node name="Walls" type="Node2D" parent="Worlds/Inside"]
+
+[node name="WallTop" type="StaticBody2D" parent="Worlds/Inside/Walls"]
+position = Vector2(0, -478)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Worlds/Inside/Walls/WallTop"]
+shape = SubResource("RectangleShape2D_in_wall_h")
+
+[node name="WallBottom" type="StaticBody2D" parent="Worlds/Inside/Walls"]
+position = Vector2(0, 478)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Worlds/Inside/Walls/WallBottom"]
+shape = SubResource("RectangleShape2D_in_wall_h")
+
+[node name="WallLeft" type="StaticBody2D" parent="Worlds/Inside/Walls"]
+position = Vector2(-838, 0)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Worlds/Inside/Walls/WallLeft"]
+shape = SubResource("RectangleShape2D_in_wall_v")
+
+[node name="WallRight" type="StaticBody2D" parent="Worlds/Inside/Walls"]
+position = Vector2(838, 0)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Worlds/Inside/Walls/WallRight"]
+shape = SubResource("RectangleShape2D_in_wall_v")
+
+[node name="Followers" type="Node2D" parent="." groups=["followers_container"]]
+
+[node name="Player" type="CharacterBody2D" parent="." groups=["player"]]
+script = ExtResource("9_player")
+virtual_stick_path = NodePath("../UI/VirtualStick")
+
+[node name="Sprite2D" type="Sprite2D" parent="Player"]
+scale = Vector2(0.3, 0.3)
+texture = ExtResource("4_pumi")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Player"]
+shape = SubResource("RectangleShape2D_player")
+
+[node name="Camera2D" type="Camera2D" parent="Player"]
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="VirtualStick" type="Control" parent="UI"]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 40.0
+offset_top = -168.0
+offset_right = 168.0
+offset_bottom = -40.0
+grow_vertical = 0
+script = ExtResource("10_stick")
+
+[node name="Fade" type="ColorRect" parent="UI"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color(1, 1, 1, 1)

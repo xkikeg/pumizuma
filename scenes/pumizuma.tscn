@@ -1,0 +1,25 @@
+[gd_scene load_steps=6 format=3 uid="uid://b0pumi0puma00"]
+
+[ext_resource type="Texture2D" path="res://drawings/pumizuma.png" id="1_tex"]
+[ext_resource type="Script" path="res://scripts/pumizuma.gd" id="2_script"]
+[ext_resource type="AudioStream" path="res://audio/pumi_normal.ogg" id="3_normal"]
+[ext_resource type="AudioStream" path="res://audio/pumi_high.ogg" id="4_high"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_pumi"]
+radius = 320.0
+
+[node name="Pumizuma" type="Area2D"]
+z_index = 10
+scale = Vector2(0.15, 0.15)
+script = ExtResource("2_script")
+voice_normal = ExtResource("3_normal")
+voice_high = ExtResource("4_high")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("1_tex")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_pumi")
+
+[node name="Voice" type="AudioStreamPlayer" parent="."]
+volume_db = -10.0
