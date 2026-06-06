@@ -25,6 +25,7 @@ var _follow_timer := 0.0
 var _home_parent: Node = null
 var _home_position: Vector2
 var _normal_texture: Texture2D = null
+var _encounter_allowed := false
 
 func _ready() -> void:
 	add_to_group("manjiro")
@@ -47,8 +48,9 @@ func _process(delta: float) -> void:
 				_poof_and_respawn()
 		State.MINATOKU:
 			_follow_player(delta)
-			# プレイヤーが まんじろ初期位置 に近づいたら encounter 開始
-			if _player.global_position.distance_to(_home_position) < D_ENCOUNTER:
+			# カットイン演出中は encounter をロック。
+			# 解禁後にプレイヤーが まんじろ初期位置 に近づいたら encounter 開始
+			if _encounter_allowed and _player.global_position.distance_to(_home_position) < D_ENCOUNTER:
 				_start_encounter()
 
 func _follow_player(delta: float) -> void:
@@ -60,6 +62,16 @@ func _start_following() -> void:
 	_state = State.FOLLOWING
 	_follow_timer = 0.0
 	_ensure_in_followers()
+	# 累計閾値超過済みなら Main 側で minatoku 変身を起動できるよう通知
+	var main := get_tree().get_first_node_in_group("main")
+	if main and main.has_method("on_manjiro_started_following"):
+		main.on_manjiro_started_following()
+
+func is_following() -> bool:
+	return _state == State.FOLLOWING
+
+func unlock_encounter() -> void:
+	_encounter_allowed = true
 
 func _ensure_in_followers() -> void:
 	var carry := get_tree().get_first_node_in_group("followers_container")
@@ -72,10 +84,12 @@ func _ensure_in_followers() -> void:
 		scale = s
 
 ## Main から呼ばれる: 累計ぷみずま閾値で呼ばれてみなとく状態に変身。
+## fukidashi カットインが終わるまで encounter はロックされる。
 func transform_to_minatoku() -> void:
 	if _state == State.MINATOKU or _state == State.ENCOUNTER:
 		return
 	_state = State.MINATOKU
+	_encounter_allowed = false
 	if minatoku_texture:
 		texture = minatoku_texture
 	_ensure_in_followers()
@@ -88,6 +102,7 @@ func _start_encounter() -> void:
 
 ## Main から encounter 演出後に呼ばれる: 通常テクスチャで再スポーン。
 func encounter_finished() -> void:
+	_encounter_allowed = false
 	if _normal_texture:
 		texture = _normal_texture
 	modulate.a = 1.0

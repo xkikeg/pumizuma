@@ -11,8 +11,8 @@ const MAX_VOICES := 10  # 同時に鳴らすぷみずま声の上限
 const MINATOKU_THRESHOLD := 20  # 累計ぷみずま獲得数の閾値
 const FUKIDASHI_HOLD := 2.0
 const FUKIDASHI_INOUT := 0.35
-const ENCOUNTER_PAUSE := 5.4  # minowa が出てから消えるまでの間
-const ENCOUNTER_FADE := 1.0
+const ENCOUNTER_PAUSE := 2.4  # minowa が出てから消えるまでの間
+const ENCOUNTER_FADE := 2.0
 
 @export var minowa_texture: Texture2D
 
@@ -71,8 +71,22 @@ func _process(_delta: float) -> void:
 ## ぷみずまが新規に attracted になった際に pumizuma.gd から呼ばれる。
 func on_pumi_attracted() -> void:
 	_pumi_collected += 1
-	if not _minatoku_triggered and _pumi_collected >= MINATOKU_THRESHOLD:
-		_trigger_minatoku()
+	_check_minatoku_trigger()
+
+## まんじろ が FOLLOWING に入った瞬間に manjiro.gd から呼ばれる。
+## 既に閾値超えなら即変身する。
+func on_manjiro_started_following() -> void:
+	_check_minatoku_trigger()
+
+func _check_minatoku_trigger() -> void:
+	if _minatoku_triggered:
+		return
+	if _pumi_collected < MINATOKU_THRESHOLD:
+		return
+	var manjiro := get_tree().get_first_node_in_group("manjiro")
+	if not manjiro or not manjiro.has_method("is_following") or not manjiro.is_following():
+		return
+	_trigger_minatoku()
 
 func _trigger_minatoku() -> void:
 	_minatoku_triggered = true
@@ -102,7 +116,13 @@ func _show_fukidashi_cutin() -> void:
 	t.tween_interval(FUKIDASHI_HOLD)
 	# pop out
 	t.tween_property(_fukidashi, "scale", Vector2.ZERO, FUKIDASHI_INOUT).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
-	t.tween_callback(func(): _fukidashi.visible = false)
+	t.tween_callback(func():
+		_fukidashi.visible = false
+		# カットイン完了後に encounter を解禁
+		var m := get_tree().get_first_node_in_group("manjiro")
+		if m and m.has_method("unlock_encounter"):
+			m.unlock_encounter()
+	)
 
 ## まんじろが MINATOKU 状態で初期位置に戻ったときに呼ばれる。
 ## minowa を出現させ、両者をフェードアウトしてから まんじろ再スポーン。
