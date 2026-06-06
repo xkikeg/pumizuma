@@ -8,14 +8,25 @@ const FADE_TIME := 0.4
 const INSIDE_PLAYER_POS := Vector2(0, 380)
 const OUTSIDE_PLAYER_POS := Vector2(0, 50)
 const MAX_VOICES := 10  # 同時に鳴らすぷみずま声の上限
+const MINATOKU_THRESHOLD := 20  # 累計ぷみずま獲得数の閾値
+const FUKIDASHI_HOLD := 2.0
+const FUKIDASHI_INOUT := 0.35
+const ENCOUNTER_PAUSE := 5.4  # minowa が出てから消えるまでの間
+const ENCOUNTER_FADE := 1.0
+
+@export var minowa_texture: Texture2D
 
 @onready var _outside: Node = $Worlds/Outside
 @onready var _inside: Node = $Worlds/Inside
 @onready var _player: CharacterBody2D = $Player
 @onready var _fade: ColorRect = $UI/Fade
+@onready var _fukidashi: TextureRect = $UI/Fukidashi
+@onready var _debug_give_btn: Button = $UI/DebugGiveBtn
 
 var _in_inside := false
 var _transitioning := false
+var _pumi_collected := 0
+var _minatoku_triggered := false
 
 func _ready() -> void:
 	add_to_group("main")
@@ -23,12 +34,101 @@ func _ready() -> void:
 	_set_world_active(_inside, false)
 	_fade.modulate.a = 0.0
 	_fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_fukidashi.scale = Vector2.ZERO
+	_fukidashi.modulate.a = 0.0
+	_fukidashi.visible = false
+	# デバッグビルド時のみボタンを有効化
+	if OS.is_debug_build():
+		_debug_give_btn.visible = true
+		_debug_give_btn.pressed.connect(_on_debug_give_pressed)
+	else:
+		_debug_give_btn.visible = false
+
+func _on_debug_give_pressed() -> void:
+	_debug_give_pumi(9)
+
+func _debug_give_pumi(n: int) -> void:
+	var puma_scene: PackedScene = load("res://scenes/pumizuma.tscn")
+	if not puma_scene:
+		return
+	var parent: Node = _inside if _in_inside else _outside
+	for i in n:
+		var puma = puma_scene.instantiate()
+		parent.add_child(puma)
+		puma.global_position = _player.global_position + Vector2(
+			randf_range(-80.0, 80.0),
+			randf_range(-80.0, 80.0)
+		)
+		# 即座に attracted 状態へ (Main 経由のカウンタ通知も走る)
+		puma._become_attracted()
 
 func _process(_delta: float) -> void:
 	if _in_inside and not _transitioning:
 		if get_tree().get_nodes_in_group("attracted_pumizuma").is_empty():
 			exit_house()
 	_update_voice_priority()
+
+## ぷみずまが新規に attracted になった際に pumizuma.gd から呼ばれる。
+func on_pumi_attracted() -> void:
+	_pumi_collected += 1
+	if not _minatoku_triggered and _pumi_collected >= MINATOKU_THRESHOLD:
+		_trigger_minatoku()
+
+func _trigger_minatoku() -> void:
+	_minatoku_triggered = true
+	var manjiro := get_tree().get_first_node_in_group("manjiro")
+	if manjiro and manjiro.has_method("transform_to_minatoku"):
+		manjiro.transform_to_minatoku()
+	# 手持ちのぷみずまを全消滅
+	for p in get_tree().get_nodes_in_group("attracted_pumizuma"):
+		if not is_instance_valid(p):
+			continue
+		# 家から自動退出されないよう先にグループから外す
+		p.remove_from_group("attracted_pumizuma")
+		var ft := create_tween()
+		ft.tween_property(p, "modulate:a", 0.0, 0.3)
+		ft.tween_callback(p.queue_free)
+	_show_fukidashi_cutin()
+
+func _show_fukidashi_cutin() -> void:
+	_fukidashi.visible = true
+	_fukidashi.scale = Vector2.ZERO
+	_fukidashi.modulate.a = 1.0
+	var t := create_tween()
+	t.set_parallel(false)
+	# pop in (オーバーシュート)
+	t.tween_property(_fukidashi, "scale", Vector2(1.15, 1.15), FUKIDASHI_INOUT).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	t.tween_property(_fukidashi, "scale", Vector2(1.0, 1.0), 0.1)
+	t.tween_interval(FUKIDASHI_HOLD)
+	# pop out
+	t.tween_property(_fukidashi, "scale", Vector2.ZERO, FUKIDASHI_INOUT).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
+	t.tween_callback(func(): _fukidashi.visible = false)
+
+## まんじろが MINATOKU 状態で初期位置に戻ったときに呼ばれる。
+## minowa を出現させ、両者をフェードアウトしてから まんじろ再スポーン。
+func on_manjiro_encounter(pos: Vector2, manjiro: Node) -> void:
+	var minowa := Sprite2D.new()
+	minowa.texture = minowa_texture
+	minowa.scale = manjiro.scale if manjiro is Node2D else Vector2(0.3, 0.3)
+	minowa.z_index = 5
+	_outside.add_child(minowa)
+	minowa.global_position = pos
+	minowa.modulate.a = 0.0
+	# pop in → 待ち → 両者フェードアウト → manjiro 再スポーン
+	var t := create_tween()
+	t.tween_property(minowa, "modulate:a", 1.0, 0.3)
+	t.tween_interval(ENCOUNTER_PAUSE)
+	t.set_parallel(true)
+	t.tween_property(minowa, "modulate:a", 0.0, ENCOUNTER_FADE)
+	t.tween_property(manjiro, "modulate:a", 0.0, ENCOUNTER_FADE)
+	t.chain().tween_callback(func():
+		minowa.queue_free()
+		if manjiro and manjiro.has_method("encounter_finished"):
+			manjiro.encounter_finished()
+		# 次サイクル用にリセット
+		_pumi_collected = 0
+		_minatoku_triggered = false
+	)
 
 ## プレイヤーに近い順に MAX_VOICES 匹だけ鳴らす。
 ## normal と high の両方が存在する場合は、個数比に応じて配分しつつ

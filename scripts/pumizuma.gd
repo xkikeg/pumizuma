@@ -89,6 +89,10 @@ func _become_attracted() -> void:
 	if _voice and voice_normal:
 		_voice.stream = voice_normal
 		_voice.play()
+	# Main に累計獲得数を通知
+	var main := get_tree().get_first_node_in_group("main")
+	if main and main.has_method("on_pumi_attracted"):
+		main.on_pumi_attracted()
 
 func _on_input_event(_viewport: Node, event: InputEvent, _shape_idx: int) -> void:
 	var tapped := false
