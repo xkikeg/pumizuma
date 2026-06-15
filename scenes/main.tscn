@@ -42,7 +42,7 @@ minowa_texture = ExtResource("16_minowa")
 
 [node name="Bgm" type="AudioStreamPlayer" parent="." unique_id=313849736]
 stream = ExtResource("14_bgm")
-volume_db = -8.0
+volume_db = -11.1
 autoplay = true
 
 [node name="Worlds" type="Node2D" parent="." unique_id=277322318]
