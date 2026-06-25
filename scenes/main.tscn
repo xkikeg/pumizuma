@@ -5,7 +5,7 @@
 [ext_resource type="Texture2D" uid="uid://cy8fmv1h6k7jq" path="res://drawings/house_interior.png" id="3_house_int"]
 [ext_resource type="Texture2D" uid="uid://ds7y3crik4b2" path="res://drawings/pumi.png" id="4_pumi"]
 [ext_resource type="Texture2D" uid="uid://cjye2u57vg1t0" path="res://drawings/okaasan_1.png" id="5_oka1"]
-[ext_resource type="Texture2D" uid="uid://cckrn7rvaqjlm" path="res://drawings/okaasan_2.png" id="6_oka2"]
+[ext_resource type="Texture2D" uid="uid://ca5iics5qxo71" path="res://drawings/okaasan_2.png" id="6_oka2"]
 [ext_resource type="Texture2D" uid="uid://ca2r3v1yg3qj3" path="res://drawings/okaasan_3.png" id="7_oka3"]
 [ext_resource type="Script" uid="uid://ba7gm7vwd54ij" path="res://scripts/main.gd" id="8_main"]
 [ext_resource type="Script" uid="uid://vew6gpa150ub" path="res://scripts/player.gd" id="9_player"]
@@ -14,9 +14,9 @@
 [ext_resource type="PackedScene" uid="uid://jjqypoev4lkh" path="res://scenes/okaasan.tscn" id="12_oka_scene"]
 [ext_resource type="PackedScene" uid="uid://jjqwf2nmmmkh" path="res://scenes/manjiro.tscn" id="13_manjiro_scene"]
 [ext_resource type="AudioStream" uid="uid://bsgi5nfx3pjr7" path="res://audio/bgm_main.ogg" id="14_bgm"]
-[ext_resource type="Texture2D" uid="uid://cafyadhpyf0er" path="res://drawings/minatoku.png" id="15_minatoku"]
+[ext_resource type="Texture2D" uid="uid://tofvup853eyl" path="res://drawings/minatoku.png" id="15_minatoku"]
 [ext_resource type="Texture2D" uid="uid://cgvbp50e8skk7" path="res://drawings/minowa.png" id="16_minowa"]
-[ext_resource type="Texture2D" uid="uid://boopw2s01cmpn" path="res://drawings/fukidashi.png" id="17_fukidashi"]
+[ext_resource type="Texture2D" uid="uid://dg1eaurqbbqm0" path="res://drawings/fukidashi.png" id="17_fukidashi"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_out_wall_h"]
 size = Vector2(3088, 100)
